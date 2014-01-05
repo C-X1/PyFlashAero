@@ -1,7 +1,9 @@
 '''
 Created on Jan 4, 2014
 
-@author: cyborg-x1
+Licence: GNU AGPL
+
+@author: Christian Holl
 '''
 
 import os
@@ -83,7 +85,6 @@ class connection(object):
         '''
         Constructor
         '''
-        print("init")
         self.host=host
         self.port=port
         self.timeout=timeout
@@ -134,7 +135,8 @@ class connection(object):
                         print("Firmware is: ")
                         print(self.fwversion)
                     else:
-                        print("ERROR: Could not determine firmware version!")
+                        if(ret!=-2):
+                            print("ERROR: Could not determine firmware version!")
                         return(-1,'')
                     
                 if(opcode[7]): #must be bigger than or equal to firmware version
@@ -169,9 +171,7 @@ class connection(object):
                 lines=lines[1:-1] #skip headline, and current dir at the end
             else:
                 return (0,())
-            
-            
-            print(lines)
+                        
             outlst=[]
             for file in lines:
                 e=file.split(",")
@@ -193,6 +193,7 @@ class connection(object):
             local_file_name = remote_location.split('/')[-1]
         file_size=0
 
+
         #does folder exist?
         if(not os.access(local_path, os.R_OK)):
             return (2,0,'')
@@ -208,6 +209,7 @@ class connection(object):
         if(os.path.isfile(local_path)):  
             return (3,0,'')
         
+        print("Downloading:" + local_file_name)
         #get the stuff from the FlashAir
         conn.request("GET", remote_location)
         download = conn.getresponse()
