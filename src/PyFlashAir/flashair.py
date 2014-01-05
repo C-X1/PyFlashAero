@@ -4,9 +4,9 @@ Created on Jan 4, 2014
 @author: cyborg-x1
 '''
 
-
+import os
 import http.client
-
+# import urllib2
 
 class file_list_entry(object):
     file_name=''
@@ -18,8 +18,8 @@ class file_list_entry(object):
     attribute_System=False;
     attribute_Hidden=False;
     attribute_ReadOnly=False;
-    date_sep=()
-    time_sep=()
+    date_human=()
+    time_human=()
     time=0
     date=0
     def __init__(self, file_name, directory_name, size, attributes, date, time):
@@ -27,11 +27,9 @@ class file_list_entry(object):
         self.directory_name=directory_name
         self.byte_size=size
         
-        '''TODO saftey of integer transform'''
-        attributes=int(attributes)
-        date=int(date)
-        time=int(time)
+
         
+        attributes=int(attributes)
         self.attribute_Archive=  not not(attributes & 1<<5)
         self.attribute_Directly= not not(attributes & 1<<4)
         self.attribute_Volume=   not not(attributes & 1<<3)
@@ -39,12 +37,15 @@ class file_list_entry(object):
         self.attribute_Hidden=   not not(attributes & 1<<1)
         self.attribute_ReadOnly= not not(attributes & 1<<0)
 
-        self.date=date;
+        time=int(time)
         self.time=time;
-                
-        self.date_sep=(((date&(0x3F<<9))>>9)+1980,((date&(0x1F<<5))>>5),date&(0x1F))
-        self.time_sep=(((time&(0x1F<<11))>>11),((time&(0x3F<<5))>>5),(time&(0x1F))*2)
+        self.time_human=(((time&(0x1F<<11))>>11),((time&(0x3F<<5))>>5),(time&(0x1F))*2)
     
+        date=int(date)
+        self.date=date;
+        self.date_human=(((date&(0x3F<<9))>>9)+1980,((date&(0x1F<<5))>>5),date&(0x1F))
+        
+        
 class command(object):
     '''OPCODE - DIR DATE ADDR LENGTH DATA  REQUIRED FWVERSION (Bigger/Smaller)'''
     Get_file_list=                      (100,1,0,0,0,0,'1.00.03',True)
@@ -150,7 +151,7 @@ class connection(object):
 
             connection.request("GET", url) 
             response=connection.getresponse();
-            return (response.status==200,response.read())
+            return (response.status!=200,response.read())
         
     def get_file_list(self,directory):
         (ret,lst)=self.send_command(command.Get_file_list,directory)
@@ -162,7 +163,7 @@ class connection(object):
             if(lines[0]=="WLANSD_FILELIST"):
                 lines=lines[1:-1] #skip headline, and current dir at the end
             else:
-                return (False,())
+                return (0,())
             
             
             print(lines)
@@ -177,7 +178,52 @@ class connection(object):
                 f=file_list_entry(e[1],e[0],e[2],e[3],e[4],e[5])
                 outlst.append(f)                
                 
-            return (True,outlst)
+            return (0,outlst)
         else:
-            return (False,())
-            
+            return (1,())
+        
+    def download_file(self, remote_location, local_path='', local_file_name=''):
+        conn = http.client.HTTPConnection(self.host)
+        if(len(local_file_name)==0):
+            local_file_name = remote_location.split('/')[-1]
+        file_size=0
+
+        #does folder exist?
+        if(not os.access(local_path, os.R_OK)):
+            return 2
+        
+        #add / if it is not there already
+        if(len(local_path)!=0 and local_path[-1]!='/'):
+            local_path+='/'
+        
+        #combine path and file
+        local_path+=local_file_name
+                        
+        #does file exist already?
+        if(os.path.isfile(local_path)):  
+            return (3,0)
+        
+        #get the stuff from the FlashAir
+        conn.request("GET", remote_location)
+        download = conn.getresponse()
+        file = open(local_path, 'wb')   
+        if(download.status==200):
+
+            while True:
+                buffer=download.read(1024*8)
+                if not buffer:
+                    break;
+                file_size += len(buffer) 
+                file.write(buffer)
+            file.close()
+        return (int(download.status!=200), file_size)
+    
+    def download_file_list_entry(self, entry,local_path='', local_filename=''):
+        (status,size)=self.download_file(entry.directory_name + '/' + entry.file_name, local_path, local_filename)
+        if(status):
+            return(1)
+        
+        if(size!=entry.byte_size):
+            return(2)
+
+        return(0)
