@@ -6,7 +6,7 @@ Created on Jan 4, 2014
 
 import os
 import http.client
-# import urllib2
+import datetime
 
 class file_list_entry(object):
     file_name=''
@@ -127,8 +127,9 @@ class connection(object):
             if(len(opcode[6])!=0):
 
                 if(len(self.fwversion)==0):
+
                     (ret, ver)=self.send_command(command.Get_the_firmware_version)
-                    if(ret):
+                    if(not ret):
                         self.fwversion=ver.decode("utf-8")[9:]
                         print("Firmware is: ")
                         print(self.fwversion)
@@ -149,15 +150,19 @@ class connection(object):
             #Connect
             connection = http.client.HTTPConnection(self.host, self.port, timeout=self.timeout)
 
-            connection.request("GET", url) 
-            response=connection.getresponse();
-            return (response.status!=200,response.read())
+            try:
+                connection.request("GET", url) 
+                response=connection.getresponse();
+                return (response.status!=200,response.read())
+            except:
+                return (-2,'')
+                pass
+            
         
     def get_file_list(self,directory):
-        (ret,lst)=self.send_command(command.Get_file_list,directory)
-
+        (ret,lst)=self.send_command(command.Get_file_list,directory=directory)
         
-        if(ret>0):
+        if(ret==0):
             
             lines=lst.decode("utf-8").split("\r\n")
             if(lines[0]=="WLANSD_FILELIST"):
@@ -174,8 +179,8 @@ class connection(object):
                 if(len(e)!=6):
                     print("Error file list entry has " +str(len(e)) +" entrie(s) instead of expected 6, skipping entry")
                     continue;
-                
-                f=file_list_entry(e[1],e[0],e[2],e[3],e[4],e[5])
+                #(file_name, directory_name, size, attributes, date, time):
+                f=file_list_entry(e[1],e[0],int(e[2]),int(e[3]),int(e[4]),int(e[5]))
                 outlst.append(f)                
                 
             return (0,outlst)
@@ -190,7 +195,7 @@ class connection(object):
 
         #does folder exist?
         if(not os.access(local_path, os.R_OK)):
-            return 2
+            return (2,0,'')
         
         #add / if it is not there already
         if(len(local_path)!=0 and local_path[-1]!='/'):
@@ -201,7 +206,7 @@ class connection(object):
                         
         #does file exist already?
         if(os.path.isfile(local_path)):  
-            return (3,0)
+            return (3,0,'')
         
         #get the stuff from the FlashAir
         conn.request("GET", remote_location)
@@ -216,14 +221,32 @@ class connection(object):
                 file_size += len(buffer) 
                 file.write(buffer)
             file.close()
-        return (int(download.status!=200), file_size)
+        return (int(download.status!=200), file_size,local_path)
     
     def download_file_list_entry(self, entry,local_path='', local_filename=''):
-        (status,size)=self.download_file(entry.directory_name + '/' + entry.file_name, local_path, local_filename)
+        (status,size,local_filename)=self.download_file(entry.directory_name + '/' + entry.file_name, local_path, local_filename)
         if(status):
             return(1)
         
+        
         if(size!=entry.byte_size):
+            os.remove(local_filename)
             return(2)
 
         return(0)
+
+    def sync_folder_to_remote_folder(self,remote_path='',local_path='',extensions=['JPG']):
+        #all extensions to upper case
+        extensions=[x.upper() for x in extensions]
+        
+        #get list of remote files
+        (status, outlist)=self.get_file_list(remote_path)
+        if(not status and len(outlist)):
+            if(not os.access(local_path, os.R_OK)):
+                return 2
+            for entry in outlist:
+                if ((entry.file_name.split('.')[-1].upper() in extensions) or len(extensions)==0):
+                    self.download_file_list_entry(entry, local_path)
+
+
+
