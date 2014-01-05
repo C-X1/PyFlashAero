@@ -7,8 +7,46 @@ Created on Jan 4, 2014
 
 import http.client
 
+
+class file_list_entry(object):
+    file_name=''
+    directory_name=''
+    byte_size=-1
+    attribute_Archive=False;
+    attribute_Directly=False;
+    attribute_Volume=False;
+    attribute_System=False;
+    attribute_Hidden=False;
+    attribute_ReadOnly=False;
+    date_sep=()
+    time_sep=()
+    time=0
+    date=0
+    def __init__(self, file_name, directory_name, size, attributes, date, time):
+        self.file_name=file_name
+        self.directory_name=directory_name
+        self.byte_size=size
+        
+        '''TODO saftey of integer transform'''
+        attributes=int(attributes)
+        date=int(date)
+        time=int(time)
+        
+        self.attribute_Archive=  not not(attributes & 1<<5)
+        self.attribute_Directly= not not(attributes & 1<<4)
+        self.attribute_Volume=   not not(attributes & 1<<3)
+        self.attribute_System=   not not(attributes & 1<<2)
+        self.attribute_Hidden=   not not(attributes & 1<<1)
+        self.attribute_ReadOnly= not not(attributes & 1<<0)
+
+        self.date=date;
+        self.time=time;
+                
+        self.date_sep=(((date&(0x3F<<9))>>9)+1980,((date&(0x1F<<5))>>5),date&(0x1F))
+        self.time_sep=(((time&(0x1F<<11))>>11),((time&(0x3F<<5))>>5),(time&(0x1F))*2)
+    
 class command(object):
-    '''OPCODE  -                            DIR DATE ADDR LENGTH DATA  REQUIRED FWVERSION (Bigger/Smaller)'''
+    '''OPCODE - DIR DATE ADDR LENGTH DATA  REQUIRED FWVERSION (Bigger/Smaller)'''
     Get_file_list=                      (100,1,0,0,0,0,'1.00.03',True)
     Get_the_number_of_files=            (101,1,0,0,0,0,'1.00.00',True)
     Get_update_status=                  (102,0,0,0,0,0,'1.00.00',True)
@@ -109,6 +147,37 @@ class connection(object):
                 
             #Connect
             connection = http.client.HTTPConnection(self.host, self.port, timeout=self.timeout)
+
             connection.request("GET", url) 
             response=connection.getresponse();
             return (response.status==200,response.read())
+        
+    def get_file_list(self,directory):
+        (ret,lst)=self.send_command(command.Get_file_list,directory)
+
+        
+        if(ret>0):
+            
+            lines=lst.decode("utf-8").split("\r\n")
+            if(lines[0]=="WLANSD_FILELIST"):
+                lines=lines[1:-1] #skip headline, and current dir at the end
+            else:
+                return (False,())
+            
+            
+            print(lines)
+            outlst=[]
+            for file in lines:
+                e=file.split(",")
+                
+                if(len(e)!=6):
+                    print("Error file list entry has " +str(len(e)) +" entrie(s) instead of expected 6, skipping entry")
+                    continue;
+                
+                f=file_list_entry(e[1],e[0],e[2],e[3],e[4],e[5])
+                outlst.append(f)                
+                
+            return (True,outlst)
+        else:
+            return (False,())
+            
