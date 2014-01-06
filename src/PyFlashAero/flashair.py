@@ -8,7 +8,6 @@ Licence: GNU AGPL
 
 import os
 import http.client
-import datetime
 
 class file_list_entry(object):
     file_name=''
@@ -81,6 +80,9 @@ class connection(object):
     host=0
     port=0
     timeout=0
+    start_date=-1
+    start_time=-1
+    
     def __init__(self, host, port, timeout):
         '''
         Constructor
@@ -232,6 +234,7 @@ class connection(object):
         
         
         if(size!=entry.byte_size):
+            print("Error Size does not match")
             os.remove(local_filename)
             return(2)
 
@@ -250,5 +253,31 @@ class connection(object):
                 if ((entry.file_name.split('.')[-1].upper() in extensions) or len(extensions)==0):
                     self.download_file_list_entry(entry, local_path)
 
-
-
+    def sync_new_pictures_since_start(self,remote_path='',local_path='',extensions=['JPG']):
+        last_file=''
+        
+        #all extensions to upper case
+        extensions=[x.upper() for x in extensions]
+        
+        #get list of remote files
+        (status, outlist)=self.get_file_list(remote_path)
+        
+        if(self.start_date < 0):
+            for entry in outlist:
+                if(entry.date>self.start_date):
+                    self.start_date=entry.date
+                    self.start_time=entry.time
+                elif (entry.date==self.start_date):
+                    if(entry.time>self.start_time):
+                        self.start_time=entry.time
+            #print(self.start_date , self.start_time)
+                
+        if(not status and len(outlist)):
+            if(not os.access(local_path, os.R_OK)):
+                return ()
+            for entry in outlist:
+                if ((entry.file_name.split('.')[-1].upper() in extensions) or len(extensions)==0):
+                    if(entry.date>=self.start_date and entry.time>self.start_time):
+                        if(not self.download_file_list_entry(entry, local_path)):
+                            last_file=local_path+'/'+entry.file_name    
+        return last_file

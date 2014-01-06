@@ -6,12 +6,10 @@ Licence: GNU AGPL
 @author: Christian Holl
 '''
 from PyFlashAero import flashair
-import time
 
 if __name__ == '__main__':
-    #                     Host/IP         Port    Timeout   
     a=flashair.connection('192.168.0.16', 80,1000)
+    #print(a.send_command(flashair.command.Get_file_list,directory='/'))
     while True:
-        #                          REMOTE_FOLDER   DOWNLOAD DIRECTORY
-        a.sync_folder_to_remote_folder('/DCIM/', '/downloaddir')
-    pass 
+        a.sync_new_pictures_since_start('/DCIM/101EOS5D', '/home/cyborg-x1/dwhelper')
+        pass
