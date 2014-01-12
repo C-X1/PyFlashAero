@@ -37,7 +37,11 @@
 ## $QT_END_LICENSE$
 ##
 #############################################################################
- 
+##
+##  Modified by Christian Holl for PyFlashAero
+##
+##
+#############################################################################
  
 from PyQt4 import QtCore, QtGui
 from PyFlashAero import flashair
