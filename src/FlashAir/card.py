@@ -266,7 +266,7 @@ class connection(object):
         #determine latest file date and time
         
         if(self.start_date < 0):
-            last_entry=()
+            last_entry=None
             for entry in outlist:
                 if(entry.date>self.start_date):
                     self.start_date=entry.date
@@ -276,8 +276,9 @@ class connection(object):
                     if(entry.time>self.start_time):
                         self.start_time=entry.time
                         last_entry=entry
-            last_file=local_path+'/'+last_entry.file_name
-            self.download_file_list_entry(last_entry, local_path) #download latest file
+            if(last_entry!=None):
+                last_file=local_path+'/'+last_entry.file_name
+                self.download_file_list_entry(last_entry, local_path) #download latest file
                 
         if(not status and len(outlist)):
             if(not os.access(local_path, os.R_OK)):
