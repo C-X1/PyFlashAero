@@ -11,7 +11,8 @@ currently the functions are only set for downloading JPEGs as preview, had troub
 also the QImage might not support RAW images ...
 )
 
-For the Preview execute:  
+For the Preview execute:
+  
 	python3 PyFlashAero.py --card_uri http://192.168.0.17 #The URL of your card
 	                       --ImageViewer     #shows the ImageViewer
 	                       --GUIinstant      #Has to be supplied (currently there is no option on the GUI to start or stop downloading!)
