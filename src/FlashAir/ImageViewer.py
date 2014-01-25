@@ -38,24 +38,23 @@
 ##
 #############################################################################
 ##
-##  Modified by Christian Holl for PyFlashAero
+##  Modified by Christian Holl for FlashAir
 ##
 ##
 #############################################################################
  
 from PyQt4 import QtCore, QtGui
-from PyFlashAero import flashair
+from FlashAir import card 
 import threading
  
-class ImageViewer(QtGui.QMainWindow):
+class ImageViewer(QtGui.QMainWindow): 
     run=False;
-    
-
+    ReceiveThread=0
     
     def __init__(self):
         super(ImageViewer, self).__init__()
- 
         self.printer = QtGui.QPrinter()
+
         self.scaleFactor = 0.0
  
         self.imageLabel = QtGui.QLabel()
@@ -85,15 +84,15 @@ class ImageViewer(QtGui.QMainWindow):
  
  
     def image_get(self):
-        con=flashair.connection('192.168.0.16', 80,1000)
+        con=card.connection('192.168.0.17', 80,1000)
         while self.run:
-            fileName=con.sync_new_pictures_since_start('/DCIM/101EOS5D', '/home/cyborg-x1/dwhelper')
+            fileName=con.sync_new_pictures_since_start('/DCIM/100EOS5D', '/home/cyborg-x1')
             if(len(fileName)>0):
                 print(fileName)
-                
                 image=QtGui.QImage(fileName)
                 self.emit(QtCore.SIGNAL('load_image(QImage)'), image)
                 pass
+        print("Exiting thread...")
  
  
     def open(self):
@@ -237,4 +236,6 @@ class ImageViewer(QtGui.QMainWindow):
         scrollBar.setValue(int(factor * scrollBar.value()
                                 + ((factor - 1) * scrollBar.pageStep()/2)))
  
-
+    def closeEvent(self, event):
+        self.run=0
+        pass

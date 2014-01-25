@@ -75,6 +75,7 @@ class connection(object):
     classdocs
     '''
     
+    
     list_directory=100
     fwversion=''
     host=0
