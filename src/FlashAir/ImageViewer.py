@@ -46,13 +46,30 @@
 from PyQt4 import QtCore, QtGui
 from FlashAir import card 
 import threading
+import time
  
 class ImageViewer(QtGui.QMainWindow): 
     run=False;
     ReceiveThread=0
+    runLock=threading.Lock()
+    ipAddr='192.168.0.1'
+    port=80
+    timeout=1000
+    folder_remote='/'
+    folder_local='.'
+    recursive=False
     
-    def __init__(self):
+    def __init__(self,ip='192.168.0.1',port=80,timeout=1000,folder_local='.',
+                 folder_remote='/', instant_run=False, recursive=False):        
         super(ImageViewer, self).__init__()
+        
+        self.folder_local=folder_local
+        self.folder_remote=folder_remote
+        self.timeout=timeout
+        self.ipAddr=ip
+        self.port=port
+        self.recursive=False
+        
         self.printer = QtGui.QPrinter()
 
         self.scaleFactor = 0.0
@@ -80,18 +97,25 @@ class ImageViewer(QtGui.QMainWindow):
         self.fitToWindowAct.setEnabled(True)
         self.fitToWindowAct.setChecked(True)
 
-        threading.Thread(target=self.image_get).start()
- 
+        if(instant_run):
+            print("Intant running...")
+            threading.Thread(target=self.image_get).start()
+            
  
     def image_get(self):
-        con=card.connection('192.168.0.17', 80,1000)
-        while self.run:
-            fileName=con.sync_new_pictures_since_start('/DCIM/100EOS5D', '/home/cyborg-x1')
+        self.runLock.acquire(True)
+        con=card.connection(self.timeout, self.port, self.timeout)
+        while self.run:           
+            self.runLock.release()
+            fileName=con.sync_new_pictures_since_start(self.folder_remote, self.folder_local)
             if(len(fileName)>0):
                 print(fileName)
                 image=QtGui.QImage(fileName)
                 self.emit(QtCore.SIGNAL('load_image(QImage)'), image)
+                time.sleep(1)
                 pass
+            self.runLock.acquire(True)
+        self.runLock.release()
         print("Exiting thread...")
  
  
@@ -237,5 +261,8 @@ class ImageViewer(QtGui.QMainWindow):
                                 + ((factor - 1) * scrollBar.pageStep()/2)))
  
     def closeEvent(self, event):
+        self.runLock.acquire(True)
+        print("Close")
+        self.runLock.release()
         self.run=0
         pass
