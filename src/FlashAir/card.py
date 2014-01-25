@@ -263,15 +263,18 @@ class connection(object):
         #get list of remote files
         (status, outlist)=self.get_file_list(remote_path)
         
+        #determine latest file date and time
         if(self.start_date < 0):
             for entry in outlist:
                 if(entry.date>self.start_date):
                     self.start_date=entry.date
                     self.start_time=entry.time
+                    last_file=local_path+'/'+entry.file_name
                 elif (entry.date==self.start_date):
                     if(entry.time>self.start_time):
                         self.start_time=entry.time
-            #print(self.start_date , self.start_time)
+                        last_file=local_path+'/'+entry.file_name
+            self.download_file_list_entry(entry, local_path) #download latest file
                 
         if(not status and len(outlist)):
             if(not os.access(local_path, os.R_OK)):
