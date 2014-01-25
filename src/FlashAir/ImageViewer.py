@@ -104,7 +104,7 @@ class ImageViewer(QtGui.QMainWindow):
  
     def image_get(self):
         self.runLock.acquire(True)
-        con=card.connection(self.timeout, self.port, self.timeout)
+        con=card.connection(self.ipAddr, self.port, self.timeout)
         while self.run:           
             self.runLock.release()
             fileName=con.sync_new_pictures_since_start(self.folder_remote, self.folder_local)
