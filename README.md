@@ -1,6 +1,28 @@
 A downloader written in python for the Toshiba FlashAir Wifi SDHC Cards.
 
-Currently using a setup of Hostname/IP, remote_folder and download directory requires a modification of the __init__.py.
-When started the script looks for the card on the given Host/IP if it is able to connect it, it gets the filelist by command.cgi
-and checks for every file inside the download directory, if a file is not present, it will be downloaded. This continues as
-long as the script is running, terminate it with CTRL-C.
+Requirements:
+Python3 & PyQt4
+
+It is highly recommended to use the card with API Mode 5 (card connects to access point).
+ 
+The downloader can be run with Preview of the latest image from the card or just downloading the images to a folder.
+(
+currently the functions are only set for downloading JPEGs as preview, had trouble with my camera switching of before finished downloading RAW
+also the QImage might not support RAW images ...
+)
+
+For the Preview execute:
+
+#Wait till the first image shows up, or the console shows your Firmwareversion
+  
+python3 PyFlashAero.py --card_uri http://192.168.0.17 #The URL of your card
+                       --ImageViewer     #shows the ImageViewer
+                       --GUIinstant      #Has to be supplied (currently there is no option on the GUI to start or stop downloading!)
+                       --folder_remote /DCIM/100EOS5D #The remote folder on your card you want it to look into
+                       --folder_local /folder_on_local_disk #The folder where the images should be stored
+
+python3 PyFlashAero.py --card_uri http://192.168.0.17 #The URL of your card
+                       --folder_remote /DCIM/100EOS5D #The remote folder on your card you want it to look into
+                       --folder_local /folder_on_local_disk #The folder where the images should be stored
+
+                      
