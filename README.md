@@ -7,8 +7,8 @@ It is highly recommended to use the card with API Mode 5 (card connects to acces
  
 The downloader can be run with Preview of the latest image from the card or just downloading the images to a folder.
 (
-currently the functions are only set for downloading JPEGs as preview, had trouble with my camera switching of before finished downloading RAW
-also the QImage might not support RAW images ...
+currently the functions are only set for downloading JPEGs as preview, had trouble with my camera switching off, before finished downloading RAW
+also QImage might not support RAW images ...
 )
 
 For the Preview execute:
