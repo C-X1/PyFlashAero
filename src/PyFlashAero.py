@@ -52,17 +52,18 @@ if __name__ == '__main__':
     parser.add_argument('--folder_remote', dest='folder_remote', help='Folder where to search for new images (remote)', default='/')
     parser.add_argument('--recursive', dest='recursive', action='store_const',
                         const=True, default=False,
-                        help='Search for new images in the folder recursively')
-
-
-    parser.add_argument('--instant', dest='instant', action='store_const',
-                        const=True, default=False,
-                        help='Search for new images in the folder recursively')
-    
+                        help='Search for new images in the folder recursively (not implemented yet)')
     
     parser.add_argument('--ImageViewer', dest='processing', action='store_const',
                         const=ImageView, default=SyncFolder,
                         help='Shows the GUI')
+    
+
+    parser.add_argument('--GUIinstant', dest='instant', action='store_const',
+                        const=True, default=False,
+                        help='GUI will start looking for images directly')
+    
+    
     
     args = parser.parse_args()
     ip = socket.gethostbyname(args.card_uri.hostname)
