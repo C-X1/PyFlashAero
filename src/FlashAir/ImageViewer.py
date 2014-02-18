@@ -47,7 +47,19 @@ from PyQt4 import QtCore, QtGui
 from FlashAir import card 
 import threading
 import time
- 
+from QtGui import QScrollArea
+
+
+
+class ScrollAreaEventHandler:
+    def handler(self, event, scrollarea):
+        modifiers = QtGui.QApplication.keyboardModifiers()
+        if modifiers != QtCore.Qt.ControlModifier:
+            QScrollArea.wheelEvent(scrollarea, event)
+        else:
+            event.ignore()
+        pass
+    
 class ImageViewer(QtGui.QMainWindow): 
     run=False;
     ReceiveThread=0
@@ -59,8 +71,11 @@ class ImageViewer(QtGui.QMainWindow):
     folder_local='.'
     recursive=False
     
+    saeh=ScrollAreaEventHandler();
+    
+    
     def __init__(self,ip='192.168.0.1',port=80,timeout=1000,folder_local='.',
-                 folder_remote='/', instant_run=False, recursive=False):        
+                 folder_remote='/', instant_run=False, recursive=False, debug_image=None):        
         super(ImageViewer, self).__init__()
         
         self.folder_local=folder_local
@@ -81,6 +96,8 @@ class ImageViewer(QtGui.QMainWindow):
         self.imageLabel.setScaledContents(True)
  
         self.scrollArea = QtGui.QScrollArea()
+        
+        self.scrollArea.wheelEvent = lambda event: self.saeh.handler(event, self.scrollArea)
         self.scrollArea.setBackgroundRole(QtGui.QPalette.Dark)
         self.scrollArea.setWidget(self.imageLabel)
         self.setCentralWidget(self.scrollArea)
@@ -96,6 +113,12 @@ class ImageViewer(QtGui.QMainWindow):
         self.run=True
         self.fitToWindowAct.setEnabled(True)
         self.fitToWindowAct.setChecked(True)
+
+        if(debug_image!=None):
+            image=QtGui.QImage(debug_image)
+            self.emit(QtCore.SIGNAL('load_image(QImage)'), image)
+            return
+
 
         if(instant_run):
             print("Intant running...")
@@ -266,3 +289,16 @@ class ImageViewer(QtGui.QMainWindow):
         self.runLock.release()
         self.run=0
         pass
+    
+    
+    def wheelEvent(self,event):
+        modifiers = QtGui.QApplication.keyboardModifiers()
+        if modifiers == QtCore.Qt.ControlModifier:
+            if(event.delta() >0):
+                self.zoomOut()
+            else:
+                self.zoomIn()
+            event.accept()
+        else:
+            event.ignore()
+                
