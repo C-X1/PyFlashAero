@@ -143,7 +143,7 @@ class connection(object):
                         return(-1,'')
                     
                 if(opcode[7]): #must be bigger than or equal to firmware version
-                    if(opcode[6]<self.fwversion):
+                    if(opcode[6]>self.fwversion):
                         print("ERROR Opcode " + str(opcode[0]) + " not supported in firmware!")
                         return(-1,'')
                 else:
