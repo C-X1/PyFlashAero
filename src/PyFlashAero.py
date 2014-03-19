@@ -4,9 +4,7 @@ Created on Jan 25, 2014
 @author: cyborg-x1
 '''
 
-from PyQt4 import QtGui
 from FlashAir import card
-from FlashAir import ImageViewer
 from urllib.parse import urlparse
 import argparse
 import socket
@@ -20,6 +18,14 @@ import time
 
 def ImageView(args):
     print("imageView")
+    
+    try:
+        from PyQt4x import QtGui
+    except ImportError:
+        sys.exit("Using --imageViewer requires PyQt4, which is not installed.")
+    
+    from FlashAir import ImageViewer
+    
     app = QtGui.QApplication(sys.argv)
     port=args.card_uri.port    
     if(port == None):
