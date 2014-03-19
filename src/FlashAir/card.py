@@ -285,7 +285,8 @@ class connection(object):
                 return ()
             for entry in outlist:
                 if ((entry.file_name.split('.')[-1].upper() in extensions) or len(extensions)==0):
-                    if(entry.date>=self.start_date and entry.time>self.start_time):
-                        if(not self.download_file_list_entry(entry, local_path)):
-                            last_file=local_path+'/'+entry.file_name    
+                    if(entry.date>=self.start_date):
+                        if(entry.date>self.start_date or entry.time>self.start_time):
+                            if(not self.download_file_list_entry(entry, local_path)):
+                                last_file=local_path+'/'+entry.file_name    
         return last_file
