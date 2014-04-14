@@ -44,7 +44,7 @@ class file_list_entry(object):
     
         date=int(date)
         self.date=date;
-        self.date_human=(((date&(0x3F<<9))>>9)+1980,((date&(0x1F<<5))>>5),date&(0x1F))
+        self.date_human=(((date&(0x3F<<9))>>9)+1980,((date&(0xF<<5))>>5),date&(0x1F))
         
         
 class command(object):
