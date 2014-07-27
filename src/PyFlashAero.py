@@ -20,7 +20,7 @@ def ImageView(args):
     print("imageView")
     
     try:
-        from PyQt4x import QtGui
+        from PyQt4 import QtGui
     except ImportError:
         sys.exit("Using --imageViewer requires PyQt4, which is not installed.")
     
