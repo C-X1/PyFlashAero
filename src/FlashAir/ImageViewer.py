@@ -47,7 +47,41 @@ from PyQt4 import QtCore, QtGui
 from FlashAir import card 
 import threading
 import time
- 
+from QtGui import QScrollArea
+
+
+
+
+
+class MyLabel(QtGui.QLabel):
+
+    image=QtGui.QImage();
+    def __init__(self, parent=None):
+        QtGui.QLabel.__init__(self, parent)
+
+    def setImage(self, image):
+        self.image=image;
+        self.setPixmap(QtGui.QPixmap.fromImage(self.image).scaled(self.size(), QtCore.Qt.KeepAspectRatio))
+        pass
+
+    def resizeEvent(self, event):
+        self.setPixmap(QtGui.QPixmap.fromImage(self.image).scaled(event.size(), QtCore.Qt.KeepAspectRatio))
+        pass
+    
+    def imageSize(self):
+        return self.image.size()
+        
+        
+
+class ScrollAreaEventHandler:
+    def handler(self, event, scrollarea):
+        modifiers = QtGui.QApplication.keyboardModifiers()
+        if modifiers != QtCore.Qt.ControlModifier:
+            QScrollArea.wheelEvent(scrollarea, event)
+        else:
+            event.ignore()
+        pass
+    
 class ImageViewer(QtGui.QMainWindow): 
     run=False;
     ReceiveThread=0
@@ -59,8 +93,11 @@ class ImageViewer(QtGui.QMainWindow):
     folder_local='.'
     recursive=False
     
+    saeh=ScrollAreaEventHandler();
+    
+    
     def __init__(self,ip='192.168.0.1',port=80,timeout=1000,folder_local='.',
-                 folder_remote='/', instant_run=False, recursive=False):        
+                 folder_remote='/', instant_run=False, recursive=False, debug_image=None):        
         super(ImageViewer, self).__init__()
         
         self.folder_local=folder_local
@@ -74,13 +111,15 @@ class ImageViewer(QtGui.QMainWindow):
 
         self.scaleFactor = 0.0
  
-        self.imageLabel = QtGui.QLabel()
+        self.imageLabel = MyLabel()
         self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
         self.imageLabel.setSizePolicy(QtGui.QSizePolicy.Ignored,
                 QtGui.QSizePolicy.Ignored)
-        self.imageLabel.setScaledContents(True)
+
  
         self.scrollArea = QtGui.QScrollArea()
+        
+        self.scrollArea.wheelEvent = lambda event: self.saeh.handler(event, self.scrollArea)
         self.scrollArea.setBackgroundRole(QtGui.QPalette.Dark)
         self.scrollArea.setWidget(self.imageLabel)
         self.setCentralWidget(self.scrollArea)
@@ -96,6 +135,12 @@ class ImageViewer(QtGui.QMainWindow):
         self.run=True
         self.fitToWindowAct.setEnabled(True)
         self.fitToWindowAct.setChecked(True)
+
+        if(debug_image!=None):
+            image=QtGui.QImage(debug_image)
+            self.emit(QtCore.SIGNAL('load_image(QImage)'), image)
+            return
+
 
         if(instant_run):
             print("Intant running...")
@@ -129,6 +174,7 @@ class ImageViewer(QtGui.QMainWindow):
                         "Cannot load %s." % fileName)
                 return
  
+            
             self.imageLabel.setPixmap(QtGui.QPixmap.fromImage(image))
             self.scaleFactor = 1.0
  
@@ -142,7 +188,9 @@ class ImageViewer(QtGui.QMainWindow):
     def load_image(self, image):
         print("loading image ... ")
         if not image.isNull():
-            self.imageLabel.setPixmap(QtGui.QPixmap.fromImage(image))
+            self.printAct.setEnabled(True)
+            self.imageLabel.setImage(image)
+            
             self.fitToWindow()
         pass
  
@@ -170,6 +218,8 @@ class ImageViewer(QtGui.QMainWindow):
     def fitToWindow(self):
         fitToWindow = self.fitToWindowAct.isChecked()
         self.scrollArea.setWidgetResizable(fitToWindow)
+
+        
         if not fitToWindow:
             self.normalSize()
  
@@ -222,7 +272,7 @@ class ImageViewer(QtGui.QMainWindow):
     def createMenus(self):
         self.fileMenu = QtGui.QMenu("&File", self)
         #self.fileMenu.addAction(self.openAct)
-        #self.fileMenu.addAction(self.printAct)
+        self.fileMenu.addAction(self.printAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
  
@@ -247,15 +297,17 @@ class ImageViewer(QtGui.QMainWindow):
         self.normalSizeAct.setEnabled(not self.fitToWindowAct.isChecked())
  
     def scaleImage(self, factor):
-        self.scaleFactor *= factor
-        self.imageLabel.resize(self.scaleFactor * self.imageLabel.pixmap().size())
- 
-        self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
-        self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)
- 
-        self.zoomInAct.setEnabled(self.scaleFactor < 3.0)
-        self.zoomOutAct.setEnabled(self.scaleFactor > 0.333)
- 
+        if not self.fitToWindowAct.isChecked():
+            self.scaleFactor *= factor
+            
+            self.imageLabel.resize(self.scaleFactor * self.imageLabel.imageSize())
+     
+            self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
+            self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)
+     
+            self.zoomInAct.setEnabled(self.scaleFactor < 3.0)
+            self.zoomOutAct.setEnabled(self.scaleFactor > 0.333)
+     
     def adjustScrollBar(self, scrollBar, factor):
         scrollBar.setValue(int(factor * scrollBar.value()
                                 + ((factor - 1) * scrollBar.pageStep()/2)))
@@ -266,3 +318,16 @@ class ImageViewer(QtGui.QMainWindow):
         self.runLock.release()
         self.run=0
         pass
+    
+    
+    def wheelEvent(self,event):
+        modifiers = QtGui.QApplication.keyboardModifiers()
+        if modifiers == QtCore.Qt.ControlModifier:
+            if(event.delta() >0):
+                self.zoomOut()
+            else:
+                self.zoomIn()
+            event.accept()
+        else:
+            event.ignore()
+                

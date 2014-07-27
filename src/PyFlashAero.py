@@ -20,7 +20,7 @@ def ImageView(args):
     print("imageView")
     
     try:
-        from PyQt4x import QtGui
+        from PyQt4 import QtGui
     except ImportError:
         sys.exit("Using --imageViewer requires PyQt4, which is not installed.")
     
@@ -30,7 +30,7 @@ def ImageView(args):
     port=args.card_uri.port    
     if(port == None):
         port = 80
-    imageViewer = ImageViewer.ImageViewer(socket.gethostbyname(args.card_uri.hostname), port, args.timeout, args.folder_local, args.folder_remote, args.instant, args.recursive)
+    imageViewer = ImageViewer.ImageViewer(socket.gethostbyname(args.card_uri.hostname), port, args.timeout, args.folder_local, args.folder_remote, args.instant, args.recursive, args.debug_image)
     imageViewer.show()
     sys.exit(app.exec_())
   
@@ -69,14 +69,25 @@ if __name__ == '__main__':
                         const=True, default=False,
                         help='GUI will start looking for images directly')
     
+    parser.add_argument('--GUIDebugImage', dest='debug_image', help='path for picture to debug the GUI')
+    
     
     
     args = parser.parse_args()
     ip = socket.gethostbyname(args.card_uri.hostname)
     
     if(not os.path.isdir(args.folder_local)):
-        print("Given folder(local) does not exist or isn't a folder!")
+        print("Given folder(local) does not exist or isn't a folder!",  end='\n', file=sys.stderr)
         exit(1)
+        
+    if((args.instant or args.debug_image!=None) and not args.processing==ImageView):
+        print("Selected GUI option without selecting GUI!",  end='\n', file=sys.stderr) 
+        exit(1)
+        
+    if(args.debug_image != None):
+        if(not os.path.isfile(args.debug_image)):            
+            print("Debug image file does not exist!", end='\n', file=sys.stderr)
+            exit(1)
         
     args.processing(args)
         
