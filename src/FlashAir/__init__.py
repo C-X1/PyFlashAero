@@ -12,4 +12,4 @@ if sys.hexversion < 0x03000000:
 
 __all__ = ['card','ImageViewer']
 from FlashAir import card
-from FlashAir import ImageViewer
+#from FlashAir import ImageViewer

@@ -20,7 +20,7 @@ def ImageView(args):
     print("imageView")
     
     try:
-        from PyQt4 import QtGui
+        import PyQt4.QtGui as QtGui
     except ImportError:
         sys.exit("Using --imageViewer requires PyQt4, which is not installed.")
     
@@ -45,7 +45,7 @@ def SyncFolder(args):
     a=card.connection(socket.gethostbyname(args.card_uri.hostname), port, args.timeout)
     print("Use ctrl-c to exit!")
     while True:
-        a.sync_new_pictures_since_start(args.folder_remote, args.folder_local)
+        a.sync_folder_to_remote_folder(args.folder_remote, args.folder_local, extensions=args.ext)
         time.sleep(1)
         pass
 
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     
     parser.add_argument('--GUIDebugImage', dest='debug_image', help='path for picture to debug the GUI')
     
-    
+    parser.add_argument('--ext', action='append', default=['JPG'], dest='ext')
     
     args = parser.parse_args()
     ip = socket.gethostbyname(args.card_uri.hostname)
