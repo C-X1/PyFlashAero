@@ -43,12 +43,11 @@
 ##
 #############################################################################
  
-from PyQt4 import QtCore, QtGui
+import PyQt4.QtCore as QtCore
+import PyQt4.QtGui as QtGui
 from FlashAir import card 
 import threading
 import time
-from QtGui import QScrollArea
-
 
 
 
@@ -77,7 +76,7 @@ class ScrollAreaEventHandler:
     def handler(self, event, scrollarea):
         modifiers = QtGui.QApplication.keyboardModifiers()
         if modifiers != QtCore.Qt.ControlModifier:
-            QScrollArea.wheelEvent(scrollarea, event)
+            QtGui.QScrollArea.wheelEvent(scrollarea, event)
         else:
             event.ignore()
         pass

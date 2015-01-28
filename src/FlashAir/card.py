@@ -212,20 +212,22 @@ class connection(object):
         if(os.path.isfile(local_path)):  
             return (3,0,'')
         
-        print("Downloading:" + local_file_name)
+        print("Downloading:" + local_file_name, end=" ... ")
         #get the stuff from the FlashAir
         conn.request("GET", remote_location)
         download = conn.getresponse()
-        file = open(local_path, 'wb')   
-        if(download.status==200):
 
+        if(download.status==200):
+            file = open(local_path, 'wb')   
             while True:
-                buffer=download.read(1024*8)
+                buffer=download.read(1024*32)
                 if not buffer:
                     break;
                 file_size += len(buffer) 
                 file.write(buffer)
             file.close()
+        download.close()
+        print("done (%d bytes) " % file_size)
         return (int(download.status!=200), file_size,local_path)
     
     def download_file_list_entry(self, entry,local_path='', local_filename=''):
@@ -253,6 +255,7 @@ class connection(object):
             for entry in outlist:
                 if ((entry.file_name.split('.')[-1].upper() in extensions) or len(extensions)==0):
                     self.download_file_list_entry(entry, local_path)
+        
 
     def sync_new_pictures_since_start(self,remote_path='',local_path='',extensions=['JPG']):
         last_file=''
