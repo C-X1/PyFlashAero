@@ -28,14 +28,15 @@ It is highly recommended to use the card with API Mode 5 (card connects to acces
 	                       --folder_local /folder_on_local_disk #The folder where the images should be stored
 
 ## Arguments
-argument   | helper       | default value
----------- | -------------|-------------
---card_uri | URI of the Toshiba FlashAir SDCard | http://192.168.0.1
---timeout  | Timeout in milliseconds | 1000
---folder_local|Folder for storing downloaded images |'.'
---folder_remote|Folder where to search for new images (remote)| '/'
---recursive | Search for new images in the folder recursively (not implemented yet) | False
---ImageViewer|Shows the GUI|SyncFolder 
---GUIinstant|GUI will start looking for images directly|False
---GUIDebugImage|path for picture to debug the GUI
---ext||'JPG'
+
+argument       | helper                                                               | default value
+---------------|----------------------------------------------------------------------|-------------
+--card_uri     | URI of the Toshiba FlashAir SDCard                                   | http://192.168.0.1
+--timeout      | Timeout in milliseconds                                              | 1000
+--folder_local |Folder for storing downloaded images                                  | '.'
+--folder_remote|Folder where to search for new images (remote)                        | '/'
+--recursive    |Search for new images in the folder recursively (not implemented yet) | False
+--ImageViewer  |Shows the GUI                                                         |
+--GUIinstant   |GUI will start looking for images directly                            | False
+--GUIDebugImage|path for picture to debug the GUI                                     |
+--ext          |extension for files to be synced                                      | 'JPG'
